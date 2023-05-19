@@ -1,9 +1,7 @@
-import { ColorScheme } from "@mantine/core";
 import type { AppProps } from "next/app";
-import { getCookie } from "cookies-next";
 import { ReactElement, ReactNode } from "react";
 import { Provider as URQLProvider } from "urql";
-import { GetServerSidePropsContext, NextPage } from "next";
+import { NextPage } from "next";
 import Head from "next/head";
 
 import Fonts from "theming/fonts";
@@ -15,21 +13,13 @@ export type NextPageWithLayout<T = {}> = NextPage<T> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
 
-type AppPropsWithLayout<T> = AppProps & {
-  Component: NextPageWithLayout<T>;
-};
-
-type LogesAppProps = {
-  colorScheme: ColorScheme;
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
 };
 
 const client = URQLClient();
 
-const PlexoApp = ({
-  Component,
-  pageProps,
-  colorScheme,
-}: AppPropsWithLayout<LogesAppProps> & LogesAppProps) => {
+const PlexoApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const getLayout = Component.getLayout ?? (page => page);
 
   return (
@@ -41,7 +31,7 @@ const PlexoApp = ({
       </Head>
       <URQLProvider value={client}>
         <PlexoProvider>
-          <MyMantineProvider colorScheme={colorScheme}>
+          <MyMantineProvider>
             <Fonts />
             {getLayout(<Component {...pageProps} />)}
           </MyMantineProvider>
@@ -50,11 +40,5 @@ const PlexoApp = ({
     </>
   );
 };
-
-PlexoApp.getInitialProps = ({ ctx }: { ctx: GetServerSidePropsContext }) => ({
-  // get color scheme from cookie
-  colorScheme: getCookie("mantine-color-scheme", ctx) || "light",
-  viewMode: getCookie("viewMode", ctx) || "list",
-});
 
 export default PlexoApp;

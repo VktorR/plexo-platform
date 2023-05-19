@@ -1,37 +1,39 @@
 import { ColorScheme, ColorSchemeProvider, MantineProvider } from "@mantine/core";
 import { NotificationsProvider } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
-import { setCookie } from "cookies-next";
-import { useState, ReactNode } from "react";
+import { useLocalStorage } from "@mantine/hooks";
+import { ReactNode } from "react";
 
 import Fonts from "theming/fonts";
 import { colorBrandDark, colorBrandPrimary } from "theming";
 
-export const useColorScheme = (initialColorScheme: ColorScheme) => {
-  const [currentColorScheme, setColorScheme] = useState<ColorScheme>(initialColorScheme);
-  const toggleColorScheme = (value?: ColorScheme) => {
-    const nextColorScheme = value || (currentColorScheme === "dark" ? "light" : "dark");
-    setColorScheme(nextColorScheme);
-    setCookie("mantine-color-scheme", nextColorScheme, { maxAge: 60 * 60 * 24 * 30 });
-  };
-  return { currentColorScheme, toggleColorScheme };
+export const useColorScheme = () => {
+  const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
+    key: "mantine-color-scheme",
+    defaultValue: "light",
+    getInitialValueInEffect: true,
+  });
+  const toggleColorScheme = (value?: ColorScheme) =>
+    setColorScheme(value || (colorScheme === "dark" ? "light" : "dark"));
+
+  return { colorScheme, setColorScheme, toggleColorScheme };
 };
 
 interface MantineProviderProps {
   children: ReactNode;
-  colorScheme: ColorScheme;
 }
 
-export const MyMantineProvider = ({ children, colorScheme }: MantineProviderProps) => {
-  const { currentColorScheme, toggleColorScheme } = useColorScheme(colorScheme);
+export const MyMantineProvider = ({ children }: MantineProviderProps) => {
+  const { colorScheme, toggleColorScheme } = useColorScheme();
+
   return (
     <>
-      <ColorSchemeProvider colorScheme={currentColorScheme} toggleColorScheme={toggleColorScheme}>
+      <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
         <MantineProvider
           withGlobalStyles
           withNormalizeCSS
           theme={{
-            colorScheme: currentColorScheme,
+            colorScheme: colorScheme,
             fontFamily: "Open Sans",
             colors: {
               brand: colorBrandPrimary,
